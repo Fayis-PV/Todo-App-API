@@ -74,9 +74,12 @@ class TodoDetailView(APIView):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, *args, **kwargs):
-        todo = Todo.objects.get(id = pk)
-        todo.delete()
-        return HttpResponseRedirect(reverse('home'))
+        try:
+            todo = Todo.objects.get(id = pk)
+            todo.delete()
+            return HttpResponseRedirect(reverse('home'))
+        except Todo.DoesNotExist:
+            return Response({'Not Found': 'Todo is already not found'}, status = status.HTTP_404_NOT_FOUND)
 
 
 class TodoCompleteView(APIView):
