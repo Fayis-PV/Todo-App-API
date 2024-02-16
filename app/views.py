@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Todo, CustomUser
@@ -7,15 +6,10 @@ from rest_framework import status
 from allauth.account.views import ConfirmEmailView
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from rest_framework.permissions import AllowAny
-from datetime import timedelta
-from django.core.mail import send_mail
-from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
 class CustomConfirmEmailView(ConfirmEmailView):
-    permission_classes = [AllowAny]
     def get(self, *args, **kwargs):
         self.object = confirmation = self.get_object()
         confirmation.confirm(self.request)
