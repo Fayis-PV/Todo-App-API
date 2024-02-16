@@ -66,18 +66,21 @@ class TodoDetailView(APIView):
             return Response({'Not Found': 'Todo is not found '}, status = status.HTTP_404_NOT_FOUND)
     
     def put(self, request, pk, *args, **kwargs):
-        todo = Todo.objects.get(id = pk)
-        serializer = TodoSerializer(todo, data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_200_OK)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        try:
+            todo = Todo.objects.get(id = pk)
+            serializer = TodoSerializer(todo, data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status = status.HTTP_200_OK)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        except Todo.DoesNotExist:
+            return Response({'Not Found': 'Todo is not found'}, status = status.HTTP_404_NOT_FOUND)
     
     def delete(self, request, pk, *args, **kwargs):
         try:
             todo = Todo.objects.get(id = pk)
             todo.delete()
-            return HttpResponseRedirect(reverse('home'))
+            return Response(status = status.HTTP_204_NO_CONTENT)
         except Todo.DoesNotExist:
             return Response({'Not Found': 'Todo is already not found'}, status = status.HTTP_404_NOT_FOUND)
 
@@ -87,13 +90,17 @@ class TodoCompleteView(APIView):
     serializer_class = TodoSerializer
 
     def post(self, request, pk, *args, **kwargs):
-        todo = Todo.objects.get(id = pk)
-        if todo.user == request.user:
-            todo.completed = True
-            todo.save()
-        else:
-            return Response(status = status.HTTP_403_FORBIDDEN)
-        return HttpResponseRedirect(reverse('home'))
+        try:
+            todo = Todo.objects.get(id = pk)
+            if todo.user == request.user:
+                todo.completed = True
+                todo.save()
+                serializer = TodoSerializer(todo)
+                return Response(serializer.data, status = status.HTTP_200_OK)
+            else:
+                return Response(status = status.HTTP_403_FORBIDDEN)
+        except Todo.DoesNotExist:
+            return Response({'Not Found': 'Todo is not found'}, status = status.HTTP_404_NOT_FOUND)
     
     
 class TodoIncompleteView(APIView):
@@ -101,11 +108,14 @@ class TodoIncompleteView(APIView):
         serializer_class = TodoSerializer
 
         def post(self, request, pk, *args, **kwargs):
-            todo = Todo.objects.get(id=pk)
-            if todo.user == request.user:
-                todo.completed = False
-                todo.save()
-            else:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            return HttpResponseRedirect(reverse('home'))
-        
+            try:
+                todo = Todo.objects.get(id=pk)
+                if todo.user == request.user:
+                    todo.completed = False
+                    todo.save()
+                    serializer = TodoSerializer(todo)
+                    return Response(serializer.data, status = status.HTTP_200_OK)
+                else:
+                    return Response(status=status.HTTP_403_FORBIDDEN)
+            except Todo.DoesNotExist:
+                return Response({'Not Found': 'Todo is not found'}, status=status.HTTP_404_NOT_FOUND)
